@@ -1,1 +1,94 @@
-create text1 file
+erDiagram
+    USER ||--o{ AUDIT_LOG : "generates"
+    USER ||--o{ ISSUE : "reports"
+    USER ||--o{ FEEDBACK : "provides"
+    USER ||--o{ DATA_ENTRY : "records"
+    USER ||--o{ AUDIT : "conducts"
+    USER ||--o{ NOTIFICATION : "receives"
+
+    DATA_ENTRY ||--o{ DOCUMENT_UPLOAD : "verified_by"
+    
+    PROJECT ||--o{ MILESTONE : "contains"
+    PROJECT ||--o{ IMPACT : "produces"
+    
+    %% Relationships for Compliance and reporting
+    ISSUE ||--o{ COMPLIANCE_RECORD : "evaluated_in"
+    DATA_ENTRY ||--o{ COMPLIANCE_RECORD : "evaluated_in"
+    PROJECT ||--o{ COMPLIANCE_RECORD : "evaluated_in"
+
+    USER {
+        int UserID PK
+        string Name
+        string Role
+        string Email
+        string Phone
+        string Status
+    }
+
+    AUDIT_LOG {
+        int AuditID PK
+        int UserID FK
+        string Action
+        string Resource
+        datetime Timestamp
+    }
+
+    ISSUE {
+        int IssueID PK
+        int CitizenID FK
+        string Type
+        string Location
+        datetime Date
+        string Status
+    }
+
+    DATA_ENTRY {
+        int EntryID PK
+        int OfficerID FK
+        string Type
+        string Location
+        float Value
+        datetime Date
+        string Status
+    }
+
+    PROJECT {
+        int ProjectID PK
+        string Title
+        string Description
+        datetime StartDate
+        datetime EndDate
+        decimal Budget
+        string Status
+    }
+
+    COMPLIANCE_RECORD {
+        int ComplianceID PK
+        int EntityID FK
+        string Type
+        string Result
+        datetime Date
+        string Notes
+    }
+
+    POLLUTION_SOURCE {
+        int SourceID PK
+        string Type
+        string Location
+        string Status
+    }
+
+    RESOURCE {
+        int ResourceID PK
+        string Type
+        int Capacity
+        int Usage
+        string Status
+    }
+
+    REPORT {
+        int ReportID PK
+        string Scope
+        string Metrics
+        datetime GeneratedDate
+    }
