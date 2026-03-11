@@ -1,1 +1,353 @@
-git new file
+-- 1. Master User table (No dependencies)
+
+CREATE TABLE User (
+
+    UserID INT PRIMARY KEY AUTO_INCREMENT,
+
+    Name VARCHAR(100) NOT NULL,
+
+    Role ENUM('Citizen', 'Officer_Environmental', 'Officer_Pollution_Control', 'Manager', 'ComplianceAuditor') NOT NULL,
+
+    Email VARCHAR(100) UNIQUE NOT NULL,
+
+    Phone VARCHAR(20),
+
+    Status VARCHAR(20) DEFAULT 'Active'
+
+);
+
+
+
+-- 2. Project Table (Now created early so other tables can reference it)
+
+CREATE TABLE Project (
+
+    ProjectID INT PRIMARY KEY AUTO_INCREMENT,
+
+    ProjectManagerID INT, 
+
+    Title VARCHAR(255),
+
+    Description TEXT,
+
+    StartDate DATE,
+
+    EndDate DATE,
+
+    Budget DECIMAL(15,2),
+
+    Status VARCHAR(50),
+
+    FOREIGN KEY (ProjectManagerID) REFERENCES User(UserID)
+
+);
+
+
+
+-- 3. Audit logs
+
+CREATE TABLE AuditLog (
+
+    AuditLogID INT PRIMARY KEY AUTO_INCREMENT,
+
+    UserID INT,
+
+    Action VARCHAR(255),
+
+    Resource VARCHAR(100),
+
+    Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (UserID) REFERENCES User(UserID)
+
+);
+
+
+
+-- 4. Issue Table
+
+CREATE TABLE Issue (
+
+    IssueID INT PRIMARY KEY AUTO_INCREMENT,
+
+    CitizenID INT,
+
+    OfficerID INT, 
+
+    Type ENUM('Pollution', 'Waste', 'Deforestation'),
+
+    Location VARCHAR(255),
+
+    Date DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    Status VARCHAR(50),
+
+    FOREIGN KEY (CitizenID) REFERENCES User(UserID),
+
+    FOREIGN KEY (OfficerID) REFERENCES User(UserID)
+
+);
+
+
+
+-- 5. Feedback (Now ProjectID will work!)
+
+CREATE TABLE Feedback (
+
+    FeedbackID INT PRIMARY KEY AUTO_INCREMENT,
+
+    CitizenID INT,
+
+    ProjectID INT, 
+
+    Comments TEXT,
+
+    Date DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    Status VARCHAR(50),
+
+    FOREIGN KEY (CitizenID) REFERENCES User(UserID),
+
+    FOREIGN KEY (ProjectID) REFERENCES Project(ProjectID)
+
+);
+
+
+
+-- 6. Environmental Data Log
+
+CREATE TABLE Environmental_Data_Log (
+
+    EntryID INT PRIMARY KEY AUTO_INCREMENT,
+
+    OfficerID INT, 
+
+    CitizenID INT, 
+
+    ProjectID INT, 
+
+    Type ENUM('Air', 'Water', 'Soil'),
+
+    Location VARCHAR(255),
+
+    Value DECIMAL(10,2),
+
+    Date DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    Status VARCHAR(50),
+
+    FOREIGN KEY (OfficerID) REFERENCES User(UserID),
+
+    FOREIGN KEY (CitizenID) REFERENCES User(UserID),
+
+    FOREIGN KEY (ProjectID) REFERENCES Project(ProjectID)
+
+);
+
+
+
+-- 7. Document Upload
+
+CREATE TABLE DocumentUpload (
+
+    DocumentID INT PRIMARY KEY AUTO_INCREMENT,
+
+    OfficerID INT, 
+
+    EntryID INT, 
+
+    FileURI VARCHAR(512),
+
+    UploadedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    VerificationStatus BOOLEAN,
+
+    FOREIGN KEY (OfficerID) REFERENCES User(UserID),
+
+    FOREIGN KEY (EntryID) REFERENCES Environmental_Data_Log(EntryID) ON DELETE CASCADE
+
+);
+
+
+
+-- 8. Pollution Source
+
+CREATE TABLE PollutionSource (
+
+    SourceID INT PRIMARY KEY AUTO_INCREMENT,
+
+    OfficerID INT, 
+
+    ProjectID INT, 
+
+    Type ENUM('Factory', 'Vehicle'),
+
+    Location VARCHAR(255),
+
+    Status VARCHAR(50),
+
+    FOREIGN KEY (OfficerID) REFERENCES User(UserID)
+
+);
+
+
+
+-- 9. Resource
+
+CREATE TABLE Resource (
+
+    ResourceID INT PRIMARY KEY AUTO_INCREMENT,
+
+    OfficerID INT, 
+
+    ProjectID INT, 
+
+    Type ENUM('Energy', 'Water', 'Waste'),
+
+    Capacity DECIMAL(15,2),
+
+    Usages DECIMAL(15,2),
+
+    Status VARCHAR(50),
+
+    FOREIGN KEY (OfficerID) REFERENCES User(UserID),
+
+    FOREIGN KEY (ProjectID) REFERENCES Project(ProjectID)
+
+);
+
+
+
+-- 10. Milestone
+
+CREATE TABLE Milestone (
+
+    MilestoneID INT PRIMARY KEY AUTO_INCREMENT,
+
+    ProjectID INT,
+
+    ProjectManagerID INT,
+
+    Title VARCHAR(255),
+
+    Date DATE,
+
+    Status VARCHAR(50),
+
+    FOREIGN KEY (ProjectID) REFERENCES Project(ProjectID) ON DELETE CASCADE,
+
+    FOREIGN KEY (ProjectManagerID) REFERENCES User(UserID)
+
+);
+
+
+
+-- 11. Impact
+
+CREATE TABLE Impact (
+
+    ImpactID INT PRIMARY KEY AUTO_INCREMENT,
+
+    ProjectID INT,
+
+    ProjectManagerID INT,
+
+    MetricsJSON JSON,
+
+    Date DATE,
+
+    Status VARCHAR(50),
+
+    FOREIGN KEY (ProjectID) REFERENCES Project(ProjectID) ON DELETE CASCADE,
+
+    FOREIGN KEY (ProjectManagerID) REFERENCES User(UserID)
+
+);
+
+
+
+-- 12. Compliance & Audit
+
+CREATE TABLE ComplianceRecord (
+
+    ComplianceID INT PRIMARY KEY AUTO_INCREMENT,
+
+    AuditorID INT, 
+
+    EntityID INT, 
+
+    Type ENUM('Issue', 'Data', 'Project', 'Milestone', 'Impact'),
+
+    Result VARCHAR(100),
+
+    Date DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    Notes TEXT,
+
+    FOREIGN KEY (AuditorID) REFERENCES User(UserID)
+
+);
+
+
+
+CREATE TABLE Audit (
+
+    AuditID INT PRIMARY KEY AUTO_INCREMENT,
+
+    AuditorID INT, 
+
+    ProjectID INT,
+
+    Scope VARCHAR(255),
+
+    Findings TEXT,
+
+    Date DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    Status VARCHAR(50),
+
+    FOREIGN KEY (AuditorID) REFERENCES User(UserID),
+
+    FOREIGN KEY (ProjectID) REFERENCES Project(ProjectID)
+
+);
+
+
+
+-- 13. Reports
+
+CREATE TABLE Report (
+
+    ReportID INT PRIMARY KEY AUTO_INCREMENT,
+
+    Scope ENUM('Issue', 'Data', 'Project', 'Milestone', 'Impact'),
+
+    Metrics TEXT,
+
+    GeneratedDate DATETIME DEFAULT CURRENT_TIMESTAMP
+
+);
+
+
+
+-- 14. Notifications
+
+CREATE TABLE Notification (
+
+    NotificationID INT PRIMARY KEY AUTO_INCREMENT,
+
+    UserID INT,
+
+    EntityID INT,
+
+    Message TEXT,
+
+    Category ENUM('Issue', 'Data', 'Project', 'Compliance'),
+
+    Status VARCHAR(20) DEFAULT 'Unread',
+
+    CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (UserID) REFERENCES User(UserID)
+
+);
