@@ -1,94 +1,129 @@
-erDiagram
-    USER ||--o{ AUDIT_LOG : "generates"
-    USER ||--o{ ISSUE : "reports"
-    USER ||--o{ FEEDBACK : "provides"
-    USER ||--o{ DATA_ENTRY : "records"
-    USER ||--o{ AUDIT : "conducts"
-    USER ||--o{ NOTIFICATION : "receives"
+26. a) Obtain the Geometric approach for 3 R manipulator in detail with necessary
 
-    DATA_ENTRY ||--o{ DOCUMENT_UPLOAD : "verified_by"
-    
-    PROJECT ||--o{ MILESTONE : "contains"
-    PROJECT ||--o{ IMPACT : "produces"
-    
-    %% Relationships for Compliance and reporting
-    ISSUE ||--o{ COMPLIANCE_RECORD : "evaluated_in"
-    DATA_ENTRY ||--o{ COMPLIANCE_RECORD : "evaluated_in"
-    PROJECT ||--o{ COMPLIANCE_RECORD : "evaluated_in"
+diagram and equations for both the forward Kinematics and Inverse Kinematics.
 
-    USER {
-        int UserID PK
-        string Name
-        string Role
-        string Email
-        string Phone
-        string Status
-    }
+11 K2 CO4
 
-    AUDIT_LOG {
-        int AuditID PK
-        int UserID FK
-        string Action
-        string Resource
-        datetime Timestamp
-    }
+OR
 
-    ISSUE {
-        int IssueID PK
-        int CitizenID FK
-        string Type
-        string Location
-        datetime Date
-        string Status
-    }
+b) Analyze the kinematic motion to describe the end of the link in world space using
 
-    DATA_ENTRY {
-        int EntryID PK
-        int OfficerID FK
-        string Type
-        string Location
-        float Value
-        datetime Date
-        string Status
-    }
+homogeneous transformation by applying D-H convention and derive the kinetic
 
-    PROJECT {
-        int ProjectID PK
-        string Title
-        string Description
-        datetime StartDate
-        datetime EndDate
-        decimal Budget
-        string Status
-    }
+equation.
 
-    COMPLIANCE_RECORD {
-        int ComplianceID PK
-        int EntityID FK
-        string Type
-        string Result
-        datetime Date
-        string Notes
-    }
+11 K2 CO4
 
-    POLLUTION_SOURCE {
-        int SourceID PK
-        string Type
-        string Location
-        string Status
-    }
+27. a) (i) Examine the force control of robotic manipulator.
 
-    RESOURCE {
-        int ResourceID PK
-        string Type
-        int Capacity
-        int Usage
-        string Status
-    }
+6 K2 CO5
 
-    REPORT {
-        int ReportID PK
-        string Scope
-        string Metrics
-        datetime GeneratedDate
-    }
+ (ii) Examine the Pneumatic manipulator control circuits. 5 K2 CO5
+
+OR
+
+b) Discuss in detail about the Neural Network Force Control for Industrial Robots. 11 K2 CO5
+
+28. a) Explain the design challenges and importance of micro and nano robots. 11 K2 CO6
+
+OR
+
+b) Explain the development and functions of unmanned vehicles. 11 K2 CO6
+
+
+
+34. a) Derive the D- H Transformation for a general purpose joint link combination. 10 K2 CO4
+
+OR
+
+b) A point p(7,3,1)T
+
+is attached to a frame Fnoa and is subjected to the following
+
+transformations. Find the coordinates of the point relative to the reference frame at
+
+the conclusion of all the below transformations.
+
+1. Rotation of 90o
+
+about the z-axis
+
+2. Followed by a translation of [4,-3,7]
+
+3. Followed by a rotation of 90o
+
+about the y-axis
+
+10 K2 CO4
+
+35. a) Illustrate the hill climbing techniques of robots. 10 K2 CO5
+
+OR
+
+b) In a particular application, a robot is used to sort diamonds by weight and by color
+
+and determine a price for the diamonds. Design a fuzzy logic system to control the
+
+process.
+
+10 K2 CO5
+
+36. a) Explain in detail about Micro and Nano robots. 10 K2 CO6
+
+OR
+
+b) Explain the applications of Machine Learning. 10 K2 CO6
+
+
+
+14. a) Elaborate various methods in robot programming, highlighting their
+
+capabilities and limitations.
+
+13 K2 CO5
+
+Reg. No.
+
+K1 – Remember; K2 – Understand; K3 – Apply; K4 – Analyze; K5 – Evaluate; K6 – Create 12569
+
+2
+
+ OR
+
+ b) Illustrate the fuzzy logic control of a cooling system where the two
+
+inputs are temperature and humidity and the output is the power
+
+setting of the air conditioning system.
+
+13 K2 CO5
+
+
+
+
+
+15. a) i) Enumerate the function of robot in manufacturing and nonmanufacturing applications.
+
+7 K2 CO6
+
+ ii) Explain the applications of Machine Learning. 6 K2 CO6
+
+ OR
+
+ b) i) Summarize the concepts and implications of virtual reality. 7 K2 CO6
+
+ ii) Explain in detail about Micro and Nano robots. 6 K2 CO6
+
+
+
+
+
+16. a) Elaborate on Homogenous Transformations & Matrix representation. 15 K2 CO4
+
+ OR
+
+ b) Describe the working principle of different types of gripper with neat
+
+sketch.
+
+15 K2 CO4
