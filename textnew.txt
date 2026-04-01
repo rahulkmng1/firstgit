@@ -1,361 +1,610 @@
-drop database ecotrack;
-
-create database ecotrack;
-
-use  ecotrack;
-
--- USER table
-
-CREATE TABLE user (
-
-    UserID INT PRIMARY KEY,
-
-    Name VARCHAR(100) NOT NULL,
-
-    Role ENUM('Admin','Auditor','Officer_Environmental','Officer_Pollution_Control','Citizen','Manager') NOT NULL,
-
-    Email VARCHAR(100) UNIQUE NOT NULL,
-
-    passwordHash VARCHAR(100) NOT NULL,
-
-    Phone VARCHAR(20),
-
-    Status VARCHAR(20) NOT NULL
-
-);
-
--- RESOURCE table (linked to Officer_Pollution_Control)
-
-CREATE TABLE resource (
-
-    ResourceID INT PRIMARY KEY,
-
-    OfficerPollutionControlID INT,
-
-    Type ENUM('Human','Financial','Material','Technological'),
-
-    Capacity DECIMAL(15,2),
-
-    Usages DECIMAL(15,2),
-
-    Status VARCHAR(50),
-
-    FOREIGN KEY (OfficerPollutionControlID) REFERENCES user(UserID)
-
-);
-
--- ENVIRONMENTAL DATA LOG table (linked to Officer_Environmental)
-
-CREATE TABLE environmental_data_log (
-
-    EntryID INT PRIMARY KEY,
-
-    OfficerEnvironmentalID INT,
-
-    CitizenID INT,
-
-    Type ENUM('Air','Water','Soil','Noise','General'),
-
-    Location VARCHAR(255),
-
-    Value DECIMAL(10,2),
-
-    Date DATETIME,
-
-    Status VARCHAR(50),
-
-    FOREIGN KEY (OfficerEnvironmentalID) REFERENCES user(UserID),
-
-    FOREIGN KEY (CitizenID) REFERENCES user(UserID)
-
-);
-
--- PROJECT table (dependent on Audit as well)
-
-CREATE TABLE project (
-
-    ProjectID INT PRIMARY KEY,
-
-    ProjectManagerID INT,
-
-    ResourceID INT,
-
-    EntryID INT,
-
-    ComplianceID INT,
-
-    AuditID INT,
-
-    Title VARCHAR(255) NOT NULL,
-
-    Description TEXT,
-
-    StartDate DATE,
-
-    EndDate DATE,
-
-    Budget DECIMAL(15,2),
-
-    Status VARCHAR(50)
-
-);
-
--- REPORT table
-
-CREATE TABLE report (
-
-    ReportID INT PRIMARY KEY,
-
-    Scope ENUM('Air','Water','Soil','Noise','General') NOT NULL,
-
-    Metrics TEXT,
-
-    GeneratedDate DATETIME,
-
-    Status VARCHAR(50)
-
-);
-
--- MILESTONE table
-
-CREATE TABLE milestone (
-
-    MilestoneID INT PRIMARY KEY,
-
-    ProjectID INT,
-
-    ProjectManagerID INT,
-
-    Title VARCHAR(255),
-
-    Date DATE,
-
-    Status VARCHAR(50),
-
-    FOREIGN KEY (ProjectID) REFERENCES project(ProjectID),
-
-    FOREIGN KEY (ProjectManagerID) REFERENCES user(UserID)
-
-);
-
--- DOCUMENTUPLOAD table
-
-CREATE TABLE documentupload (
-
-    DocumentID INT PRIMARY KEY,
-
-    OfficerEnvironmentalID INT,
-
-    EntryID INT,
-
-    FileURI VARCHAR(512),
-
-    UploadedDate DATETIME,
-
-    VerificationStatus TINYINT(1),
-
-    FOREIGN KEY (OfficerEnvironmentalID) REFERENCES user(UserID),
-
-    FOREIGN KEY (EntryID) REFERENCES environmental_data_log(EntryID)
-
-);
-
--- POLLUTIONSOURCE table
-
-CREATE TABLE pollutionsource (
-
-    SourceID INT PRIMARY KEY,
-
-    OfficerPollutionControlID INT,
-
-    Type ENUM('Industrial','Vehicular','Agricultural','Domestic','Other'),
-
-    Location VARCHAR(255),
-
-    Status VARCHAR(50),
-
-    FOREIGN KEY (OfficerPollutionControlID) REFERENCES user(UserID)
-
-);
-
--- ISSUE table
-
-CREATE TABLE issue (
-
-    IssueID INT PRIMARY KEY,
-
-    OfficerEnvironmentalID INT,
-
-    CitizenID INT,
-
-    Type ENUM('Air','Water','Soil','Noise','General'),
-
-    Location VARCHAR(255),
-
-    Date DATETIME,
-
-    IssueDiscription VARCHAR(200),
-
-    Status ENUM('Open','InProgress','Resolved','Closed'),
-
-    FOREIGN KEY (OfficerEnvironmentalID) REFERENCES user(UserID),
-
-    FOREIGN KEY (CitizenID) REFERENCES user(UserID)
-
-);
-
--- NOTIFICATION table
-
-CREATE TABLE notification (
-
-    NotificationID INT PRIMARY KEY,
-
-    UserID INT,
-
-    EntityID INT,
-
-    Message TEXT,
-
-    Category ENUM('Alert','Reminder','Update','Warning'),
-
-    CreatedDate DATETIME,
-
-    FOREIGN KEY (UserID) REFERENCES user(UserID)
-
-);
-
-CREATE TABLE impact (
-
-    ImpactID INT PRIMARY KEY,
-
-    ProjectID INT,
-
-    ProjectManagerID INT,
-
-    MetricsJSON JSON,
-
-    Date DATE,
-
-    Status VARCHAR(50),
-
-    FOREIGN KEY (ProjectID) REFERENCES project(ProjectID),
-
-    FOREIGN KEY (ProjectManagerID) REFERENCES user(UserID)
-
-);
-
-CREATE TABLE audit (
-
-    AuditID INT PRIMARY KEY,
-
-    AuditorID INT,
-
-    ProjectID INT,
-
-    Scope VARCHAR(255),
-
-    Findings TEXT,
-
-    Date DATETIME,
-
-    Status VARCHAR(50),
-
-    FOREIGN KEY (AuditorID) REFERENCES user(UserID),
-
-    FOREIGN KEY (ProjectID) REFERENCES project(ProjectID)
-
-);
-
--- COMPLIANCERECORD table
-
-CREATE TABLE compliancerecord (
-
-    ComplianceID INT PRIMARY KEY,
-
-    AuditorID INT,
-
-    ProjectID INT,
-
-    MilestoneID INT,
-
-    ImpactID INT,
-
-    Type ENUM('Safety','Environmental','Legal','Financial'),
-
-    Result VARCHAR(100),
-
-    Date DATETIME,
-
-    Notes TEXT,
-
-    FOREIGN KEY (AuditorID) REFERENCES user(UserID),
-
-    FOREIGN KEY (ProjectID) REFERENCES project(ProjectID),
-
-    FOREIGN KEY (MilestoneID) REFERENCES milestone(MilestoneID),
-
-    FOREIGN KEY (ImpactID) REFERENCES impact(ImpactID)
-
-);
-
--- AUDIT table
- 
-
-
--- FEEDBACK table
-
-CREATE TABLE feedback (
-
-    FeedbackID INT PRIMARY KEY,
-
-    CitizenID INT,
-
-    ProjectID INT,
-
-    Comments TEXT,
-
-    Date DATETIME,
-
-    Status VARCHAR(50),
-
-    FOREIGN KEY (CitizenID) REFERENCES user(UserID),
-
-    FOREIGN KEY (ProjectID) REFERENCES project(ProjectID)
-
-);
-
--- IMPACT table
- 
-
-
--- AUDITLOG table
-
-CREATE TABLE auditlog (
-
-    AuditLogID INT PRIMARY KEY,
-
-    UserID INT,
-
-    Action VARCHAR(255),
-
-    Resource VARCHAR(100),
-
-    Timestamp DATETIME,
-
-    FOREIGN KEY (UserID) REFERENCES user(UserID)
-
-);
-
-ALTER TABLE project
-
-ADD CONSTRAINT fk_project_manager FOREIGN KEY (ProjectManagerID) REFERENCES user(UserID),
-
-ADD CONSTRAINT fk_project_resource FOREIGN KEY (ResourceID) REFERENCES resource(ResourceID),
-
-ADD CONSTRAINT fk_project_entry FOREIGN KEY (EntryID) REFERENCES environmental_data_log(EntryID),
-
-ADD CONSTRAINT fk_project_audit FOREIGN KEY (AuditID) REFERENCES audit(AuditID),
-
-ADD CONSTRAINT fk_project_compliance FOREIGN KEY (ComplianceID) REFERENCES compliancerecord(ComplianceID);
-
- 
+package com.cts.ecotrack.service;
+
+import com.cts.ecotrack.dao.UserRepository;
+import com.cts.ecotrack.dto.*;
+import com.cts.ecotrack.entity.Project;
+import com.cts.ecotrack.entity.Resource;
+import com.cts.ecotrack.entity.User;
+import com.cts.ecotrack.dao.ProjectRepository;
+import com.cts.ecotrack.dao.ResourceRepository;
+import com.cts.ecotrack.dao.EnvironmentalDataLogRepository;
+import com.cts.ecotrack.entity.EnvironmentalDataLog;
+import com.cts.ecotrack.exception.ResourceNotFoundException;
+import com.cts.ecotrack.exception.BadRequestException;
+import java.util.ArrayList;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ProjectService {
+
+    private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
+    private final ResourceRepository resourceRepository;
+    private final EnvironmentalDataLogRepository environmentalDataLogRepository;
+
+    public DashboardKpiDTO getDashboardKpis() {
+        long total     = projectRepository.count();
+        long active    = projectRepository.countByStatus("Active");
+        long delayed   = projectRepository.countByStatus("Delayed");
+        long completed = projectRepository.countByStatus("Completed");
+
+        return DashboardKpiDTO.builder()
+                .totalProjects(total)
+                .activeProjects(active)
+                .delayedProjects(delayed)
+                .completedProjects(completed)
+                .build();
+    }
+
+    public List<ProjectSummaryDTO> getAllProjectSummaries() {
+        return projectRepository.findAll().stream()
+                .map(p -> ProjectSummaryDTO.builder()
+                        .projectId(p.getProjectId())
+                        .title(p.getTitle())
+                        .status(p.getStatus())
+                        .startDate(p.getStartDate())
+                        .endDate(p.getEndDate())
+                        .budget(p.getBudget())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+
+        @Transactional
+        public void createProject(ProjectRequestDTO dto) {
+            // 1. Fetch the Project Manager (Required)
+            User manager = userRepository.findById(dto.getProjectManagerId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Project manager not found with id: " + dto.getProjectManagerId()));
+
+            // 2. LOGIC CHECK: At least one must be present
+            if (dto.getResourceId() == null && dto.getEntryId() == null) {
+                throw new BadRequestException("Project must be associated with either a Resource or an Environmental Data Log.");
+            }
+
+            if (dto.getResourceId() != null && dto.getEntryId() != null) {
+                throw new BadRequestException("Project must be associated with either a Resource or an Environmental Data Log Put Any ONe.");
+            }
+
+            Resource resource = null;
+            if (dto.getResourceId() != null) {
+                resource = resourceRepository.findById(dto.getResourceId())
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Resource not found with id: " + dto.getResourceId()));
+            }
+
+            EnvironmentalDataLog dataLog = null;
+            if (dto.getEntryId() != null) {
+                dataLog = environmentalDataLogRepository.findById(dto.getEntryId())
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Environmental Data Log not found with id: " + dto.getEntryId()));
+            }
+
+
+            LocalDate start = LocalDate.parse(dto.getStartDate());
+            LocalDate end   = LocalDate.parse(dto.getEndDate());
+            if (end.isBefore(start)) {
+                throw new BadRequestException("End date cannot be before start date");
+            }
+
+
+            Project project = Project.builder()
+                    .projectId(generateProjectId())
+                    .projectManager(manager)
+                    .resource(resource)
+                    .environmentalDataLog(dataLog)
+                    .title(dto.getTitle())
+                    .description(dto.getDescription())
+                    .startDate(start)
+                    .endDate(end)
+                    .budget(new BigDecimal(dto.getBudget()))
+                    .status(dto.getStatus())
+                    .build();
+
+            projectRepository.save(project);
+        }
+
+    public Project getProjectById(Integer projectId) {
+        //  ResourceNotFoundException instead of IllegalArgumentException
+        return projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Project not found with id: " + projectId));
+    }
+
+    public ProjectResponseDTO getProjectDtoById(Integer id) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Project not found with id: " + id));
+
+        return ProjectResponseDTO.builder()
+                .title(project.getTitle())
+                .description(project.getDescription())
+                .budget(project.getBudget())
+                .startDate(project.getStartDate())
+                .endDate(project.getEndDate())
+                .build();
+    }
+
+    @Transactional
+    public void updateProject(Integer projectId, String newStatus) {
+        Project project = getProjectById(projectId);
+        project.setStatus(newStatus);
+        projectRepository.save(project);
+    }
+
+    @Transactional
+    public void updateProject(Integer projectId, ProjectRequestDTO dto) {
+        Project project = getProjectById(projectId);
+
+        if (dto.getTitle() != null)       project.setTitle(dto.getTitle());
+        if (dto.getDescription() != null) project.setDescription(dto.getDescription());
+        if (dto.getStartDate() != null)   project.setStartDate(LocalDate.parse(dto.getStartDate()));
+        if (dto.getEndDate() != null)     project.setEndDate(LocalDate.parse(dto.getEndDate()));
+        if (dto.getBudget() != null)      project.setBudget(new BigDecimal(dto.getBudget()));
+        if (dto.getStatus() != null)      project.setStatus(dto.getStatus());
+
+
+        if (project.getEndDate().isBefore(project.getStartDate())) {
+            throw new BadRequestException("End date cannot be before start date");
+        }
+
+        projectRepository.save(project);
+    }
+
+
+    @Transactional
+    public void deleteProject(Integer projectId) {
+
+        if (!projectRepository.existsById(projectId)) {
+            throw new ResourceNotFoundException("Project not found with id: " + projectId);
+        }
+        projectRepository.deleteById(projectId);
+    }
+
+
+    public List<ProjectStatusDTO> getProjectsByStatus(String status) {
+        return projectRepository.findByStatus(status)
+                .stream()
+                .map(project -> new ProjectStatusDTO(
+                        project.getProjectId(),
+                        project.getTitle()
+                ))
+                .collect(Collectors.toList());
+    }
+
+
+
+    public List<ProposedProjectDTO> getUpcomingProjects() {
+        List<ProposedProjectDTO> proposals = new ArrayList<>();
+
+        // 1. Process Environmental Data Logs
+        List<EnvironmentalDataLog> logs = environmentalDataLogRepository.findByStatus("Verified");
+        for (EnvironmentalDataLog log : logs) {
+            String priority = "Low";
+
+            if (log.getValue() != null) {
+                double rawVal = log.getValue().doubleValue();
+                String type = log.getType() != null ? log.getType().toString().toLowerCase() : "";
+
+
+                double normalizedVal;
+                if (type.contains("soil")) {
+                    normalizedVal = (rawVal / 14.0) * 100;
+                } else if (type.contains("water")) {
+                    normalizedVal = (rawVal / 1000.0) * 100;
+                } else if (type.contains("air")) {
+                    normalizedVal = (rawVal / 300.0) * 100;
+                } else {
+                    normalizedVal = rawVal;
+                }
+
+                if (normalizedVal > 75) priority = "High";
+                else if (normalizedVal > 50) priority = "Medium";
+            }
+
+            String requesterInfo = "System";
+            if (log.getOfficerEnvironmental() != null) {
+                User u = log.getOfficerEnvironmental();
+                requesterInfo = String.format("%s (%s)", u.getName(), u.getRole());
+            }
+
+            proposals.add(ProposedProjectDTO.builder()
+                    .projectType(log.getType().toString())
+                    .requestedBy(requesterInfo)
+                    .priority(priority)
+                    .build());
+        }
+
+        List<Resource> resources = resourceRepository.findAll();
+        for (Resource res : resources) {
+            String requesterInfo = "Resource Officer";
+            if (res.getOfficerPollutionControl() != null) {
+                User u = res.getOfficerPollutionControl();
+                requesterInfo = String.format("%s (%s)", u.getName(), u.getRole());
+            }
+
+            proposals.add(ProposedProjectDTO.builder()
+                    .projectType(res.getType().toString())
+                    .requestedBy(requesterInfo)
+                    .priority(res.getStatus())
+                    .build());
+        }
+
+        return proposals;
+    }
+
+
+    private Integer generateProjectId() {
+        return projectRepository.findMaxProjectId()
+                .map(id -> id + 1)
+                .orElse(1);
+    }
+}
+package com.cts.ecotrack.service;
+
+import com.cts.ecotrack.dao.UserRepository;
+import com.cts.ecotrack.entity.Impact;
+import com.cts.ecotrack.entity.Project;
+import com.cts.ecotrack.entity.User;
+import com.cts.ecotrack.dao.ProjectRepository;
+import com.cts.ecotrack.dto.ImpactRequestDTO;
+import com.cts.ecotrack.dto.ImpactSummaryDTO;
+import com.cts.ecotrack.dto.GlobalImpactTotalsDTO;
+import com.cts.ecotrack.dto.ProjectImpactDTO;
+import com.cts.ecotrack.enums.Status;
+import com.cts.ecotrack.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ImpactService {
+
+    private final com.cts.ecotrack.dao.ImpactRepository impactRepository;
+    private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
+
+    // ─── Global Impact Totals ────────────────────────────────────────────────
+    // Powers: Impact page → 4 top KPI cards
+    public GlobalImpactTotalsDTO getGlobalImpactTotals() {
+        List<Impact> allImpacts = impactRepository.findAll();
+
+        double totalCo2    = allImpacts.stream().mapToDouble(i -> extractMetric(i, "co2Reduced")).sum();
+        double totalTrees  = allImpacts.stream().mapToDouble(i -> extractMetric(i, "treesPlanted")).sum();
+        double totalEnergy = allImpacts.stream().mapToDouble(i -> extractMetric(i, "energySaved")).sum();
+        double totalPeople = allImpacts.stream().mapToDouble(i -> extractMetric(i, "peopleImpacted")).sum();
+        double totalWater  = allImpacts.stream().mapToDouble(i -> extractMetric(i, "waterConserved")).sum();
+
+        return GlobalImpactTotalsDTO.builder()
+                .co2ReducedTons(totalCo2)
+                .treesPlanted((long) totalTrees)
+                .energySavedKwh(totalEnergy)
+                .peopleImpacted((long) totalPeople)
+                .waterConservedLitres(totalWater)
+                .build();
+    }
+
+    // ─── Project-wise Impact Analysis ────────────────────────────────────────
+    // Powers: Impact page → "Project-wise Impact Analysis" table
+    public List<ProjectImpactDTO> getProjectWiseImpact() {
+        return projectRepository.findAll().stream()
+                .map(project -> {
+                    List<Impact> impacts = impactRepository.findByProject_ProjectId(project.getProjectId());
+
+                    double co2    = impacts.stream().mapToDouble(i -> extractMetric(i, "co2Reduced")).sum();
+                    double trees  = impacts.stream().mapToDouble(i -> extractMetric(i, "treesPlanted")).sum();
+                    double energy = impacts.stream().mapToDouble(i -> extractMetric(i, "energySaved")).sum();
+                    double water  = impacts.stream().mapToDouble(i -> extractMetric(i, "waterConserved")).sum();
+                    double people = impacts.stream().mapToDouble(i -> extractMetric(i, "peopleImpacted")).sum();
+
+                    return ProjectImpactDTO.builder()
+                            .projectId(project.getProjectId())
+                            .projectName(project.getTitle())
+                            .co2ReducedTons(co2)
+                            .treesPlanted((long) trees)
+                            .energySavedKwh(energy)
+                            .waterConservedLitres(water)
+                            .peopleImpacted((long) people)
+                            .build();
+                })
+                .filter(dto -> dto.getCo2ReducedTons() > 0
+                        || dto.getTreesPlanted() > 0
+                        || dto.getEnergyKwh() > 0
+                        || dto.getPeopleImpacted() > 0)
+                .collect(Collectors.toList());
+    }
+
+    // ─── Carbon Footprint Reduction Bar Chart ────────────────────────────────
+    // Powers: Impact page → "Carbon Footprint Reduction" section
+    public List<ProjectImpactDTO> getCarbonFootprintByProject() {
+        List<ProjectImpactDTO> projectImpacts = getProjectWiseImpact();
+        double total = projectImpacts.stream().mapToDouble(ProjectImpactDTO::getCo2ReducedTons).sum();
+
+        projectImpacts.forEach(dto ->
+                dto.setCo2Percentage(total > 0 ? (dto.getCo2ReducedTons() / total) * 100 : 0));
+
+        return projectImpacts;
+    }
+
+    // ─── Community Reach Bar Chart ───────────────────────────────────────────
+    // Powers: Impact page → "Community Reach" section
+    public List<ProjectImpactDTO> getCommunityReachByProject() {
+        List<ProjectImpactDTO> projectImpacts = getProjectWiseImpact();
+        double total = projectImpacts.stream().mapToDouble(p -> p.getPeopleImpacted()).sum();
+
+        projectImpacts.forEach(dto ->
+                dto.setPeoplePercentage(total > 0 ? ((double) dto.getPeopleImpacted() / total) * 100 : 0));
+
+        return projectImpacts;
+    }
+
+    // ─── Get Impact for a Single Project ────────────────────────────────────
+    // Powers: ProjectDetail page → Impact section / tab
+    public List<ImpactSummaryDTO> getImpactsByProject(Integer projectId) {
+        //  Check project exists first
+        if (!projectRepository.existsById(projectId)) {
+            throw new ResourceNotFoundException("Project not found with id: " + projectId);
+        }
+
+        return impactRepository.findByProject_ProjectId(projectId).stream()
+                .map(i -> ImpactSummaryDTO.builder()
+                        .impactId(i.getImpactId())
+                        .projectId(projectId)
+                        .metricsJson(i.getMetricsJson())
+                        .date(i.getDate())
+                        .status(String.valueOf(i.getStatus()))
+                        .build())
+                .collect(Collectors.toList());
+
+    }
+
+    // ─── Record Impact Entry ─────────────────────────────────────────────────
+    @Transactional
+    public Impact recordImpact(ImpactRequestDTO dto) {
+        // ResourceNotFoundException instead of IllegalArgumentException
+        Project project = projectRepository.findById(dto.getProjectId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Project not found with id: " + dto.getProjectId()));
+
+        User manager = project.getProjectManager();
+
+        Map<String, Object> metrics = new HashMap<>();
+        metrics.put("co2Reduced",     dto.getCo2ReducedTons());
+        metrics.put("treesPlanted",   dto.getTreesPlanted());
+        metrics.put("energySaved",    dto.getEnergySavedKwh());
+        metrics.put("waterConserved", dto.getWaterConservedLitres());
+        metrics.put("peopleImpacted", dto.getPeopleImpacted());
+
+        Impact impact = Impact.builder()
+                .impactId(generateImpactId())
+                .project(project)
+                .projectManager(manager)
+                .metricsJson(metrics)
+                .date(dto.getDate() != null ? dto.getDate() : LocalDate.now())
+                .status(String.valueOf(Status.valueOf(dto.getStatus() != null ? dto.getStatus() : "Active")))
+                .build();
+
+        return impactRepository.save(impact);
+    }
+
+    // ─── Update Impact Entry ─────────────────────────────────────────────────
+    @Transactional
+    public Impact updateImpact(Integer impactId, ImpactRequestDTO dto) {
+        //  ResourceNotFoundException instead of IllegalArgumentException
+        Impact impact = impactRepository.findById(impactId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Impact not found with id: " + impactId));
+
+        Map<String, Object> metrics = impact.getMetricsJson() != null
+                ? new HashMap<>(impact.getMetricsJson())
+                : new HashMap<>();
+
+        if (dto.getCo2ReducedTons() != null)      metrics.put("co2Reduced",     dto.getCo2ReducedTons());
+        if (dto.getTreesPlanted() != null)         metrics.put("treesPlanted",   dto.getTreesPlanted());
+        if (dto.getEnergySavedKwh() != null)       metrics.put("energySaved",    dto.getEnergySavedKwh());
+        if (dto.getWaterConservedLitres() != null) metrics.put("waterConserved", dto.getWaterConservedLitres());
+        if (dto.getPeopleImpacted() != null)       metrics.put("peopleImpacted", dto.getPeopleImpacted());
+
+        impact.setMetricsJson(metrics);
+        if (dto.getDate() != null)   impact.setDate(dto.getDate());
+        if (dto.getStatus() != null) impact.setStatus(dto.getStatus());
+
+        return impactRepository.save(impact);
+    }
+
+    // ─── Delete Impact Entry ─────────────────────────────────────────────────
+    @Transactional
+    public void deleteImpact(Integer impactId) {
+        //  Check existence before deleting
+        if (!impactRepository.existsById(impactId)) {
+            throw new ResourceNotFoundException("Impact not found with id: " + impactId);
+        }
+        impactRepository.deleteById(impactId);
+    }
+
+    // ─── Helper: Extract Metric from JSON ────────────────────────────────────
+    private double extractMetric(Impact impact, String key) {
+        if (impact.getMetricsJson() == null) return 0;
+        Object value = impact.getMetricsJson().get(key);
+        if (value == null) return 0;
+        if (value instanceof Number) return ((Number) value).doubleValue();
+        try { return Double.parseDouble(value.toString()); }
+        catch (NumberFormatException e) { return 0; }
+    }
+
+    // ─── Helper: Generate Impact ID ──────────────────────────────────────────
+    private Integer generateImpactId() {
+        return impactRepository.findMaxImpactId()
+                .map(id -> id + 1)
+                .orElse(1);
+    }
+}
+package com.cts.ecotrack.service;
+
+import com.cts.ecotrack.dao.UserRepository;
+import com.cts.ecotrack.entity.Milestone;
+import com.cts.ecotrack.entity.Project;
+import com.cts.ecotrack.entity.User;
+import com.cts.ecotrack.dao.MilestoneRepository;
+import com.cts.ecotrack.dao.ProjectRepository;
+import com.cts.ecotrack.dto.MilestoneRequestDTO;
+import com.cts.ecotrack.dto.MilestoneListDTO;
+import com.cts.ecotrack.exception.ResourceNotFoundException;
+import com.cts.ecotrack.exception.BadRequestException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class MilestoneService {
+
+    private final MilestoneRepository milestoneRepository;
+    private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
+
+    // ─── Get All Milestones ──────────────────────────────────────────────────
+    public List<MilestoneListDTO> getAllMilestones() {
+        return milestoneRepository.findAllWithProject().stream()
+                .map(m -> MilestoneListDTO.builder()
+                        .milestoneId(m.getMilestoneId())
+                        .title(m.getTitle())
+                        .projectId(m.getProject() != null ? m.getProject().getProjectId() : null)
+                        .projectName(m.getProject() != null ? m.getProject().getTitle() : "—")
+                        .dueDate(m.getDate())
+                        .status(m.getStatus())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    // ─── Get Milestones by Project ───────────────────────────────────────────
+    public List<MilestoneListDTO> getMilestonesByProject(Integer projectId) {
+        //  Check project exists first
+        if (!projectRepository.existsById(projectId)) {
+            throw new ResourceNotFoundException("Project not found with id: " + projectId);
+        }
+        return milestoneRepository.findByProject_ProjectId(projectId).stream()
+                .map(m -> MilestoneListDTO.builder()
+                        .milestoneId(m.getMilestoneId())
+                        .title(m.getTitle())
+                        .projectId(projectId)
+                        .projectName(m.getProject().getTitle())
+                        .dueDate(m.getDate())
+                        .status(m.getStatus())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    // ─── Add New Milestone ───────────────────────────────────────────────────
+    @Transactional
+    public Milestone createMilestone(MilestoneRequestDTO dto) {
+        //  ResourceNotFoundException instead of IllegalArgumentException
+        Project project = projectRepository.findById(dto.getProjectId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Project not found with id: " + dto.getProjectId()));
+
+        //  BadRequestException for past due date
+        LocalDate dueDate = LocalDate.parse(dto.getDueDate());
+        if (dueDate.isBefore(LocalDate.now())) {
+            throw new BadRequestException("Milestone due date cannot be in the past");
+        }
+
+        User manager = project.getProjectManager();
+
+        Milestone milestone = Milestone.builder()
+                .milestoneId(generateMilestoneId())
+                .project(project)
+                .projectManager(manager)
+                .title(dto.getTitle())
+                .date(dueDate)
+                .status(dto.getStatus())
+                .build();
+
+        return milestoneRepository.save(milestone);
+    }
+
+    // ─── Update Milestone Status ─────────────────────────────────────────────
+    @Transactional
+    public Milestone updateMilestoneStatus(Integer milestoneId, String newStatus) {
+        Milestone milestone = getMilestoneById(milestoneId);
+        milestone.setStatus(newStatus);
+        return milestoneRepository.save(milestone);
+    }
+
+    // ─── Update Milestone ────────────────────────────────────────────────────
+    @Transactional
+    public MilestoneListDTO updateMilestone(Integer milestoneId, MilestoneRequestDTO dto) {
+        Milestone milestone = getMilestoneById(milestoneId);
+
+        // Apply changes
+        if (dto.getTitle() != null)   milestone.setTitle(dto.getTitle());
+        if (dto.getDueDate() != null) milestone.setDate(LocalDate.parse(dto.getDueDate()));
+        if (dto.getStatus() != null)  milestone.setStatus(dto.getStatus());
+
+        if (dto.getProjectId() != null) {
+            Project project = projectRepository.findById(dto.getProjectId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+            milestone.setProject(project);
+            milestone.setProjectManager(project.getProjectManager());
+        }
+
+        Milestone updated = milestoneRepository.save(milestone);
+
+        // Transform and return
+        return MilestoneListDTO.builder()
+                .milestoneId(updated.getMilestoneId())
+                .title(updated.getTitle())
+                .projectId(updated.getProject().getProjectId())
+                .projectName(updated.getProject().getTitle())
+                .dueDate(updated.getDate()) // Mapping entity 'date' to DTO 'dueDate'
+                .status(updated.getStatus())
+                .build();
+    }
+
+    // ─── Delete Milestone ────────────────────────────────────────────────────
+    @Transactional
+    public void deleteMilestone(Integer milestoneId) {
+        // Check existence before deleting
+        if (!milestoneRepository.existsById(milestoneId)) {
+            throw new ResourceNotFoundException("Milestone not found with id: " + milestoneId);
+        }
+        milestoneRepository.deleteById(milestoneId);
+    }
+
+    // ─── Get Milestone by ID ─────────────────────────────────────────────────
+    public Milestone getMilestoneById(Integer milestoneId) {
+        //  ResourceNotFoundException instead of IllegalArgumentException
+        return milestoneRepository.findById(milestoneId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Milestone not found with id: " + milestoneId));
+    }
+
+    // ─── Helper: Generate Milestone ID ───────────────────────────────────────
+    private Integer generateMilestoneId() {
+        return milestoneRepository.findMaxMilestoneId()
+                .map(id -> id + 1)
+                .orElse(1);
+    }
+
+}
+
+This are all my service class i need to implement junit testing
